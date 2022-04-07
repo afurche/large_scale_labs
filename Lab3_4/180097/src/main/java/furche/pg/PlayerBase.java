@@ -3,6 +3,9 @@ package furche.pg;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,15 +23,63 @@ public class PlayerBase {
      */
 
     private List<Player> playerBaseList;
-    private int numberOfPlayers;
 
     /**
      * Constructor of PlayerBase class.
      * Returns new instance of PlayerBase
+     * Based on data from player_info new players are created using createPlayerAndReadGameHistory
      */
     public PlayerBase(){
         this.playerBaseList = new ArrayList<>();
-        this.numberOfPlayers = 0;
+        String pathToPlayerInfo = "src/main/resources/player_info.txt";
+        try (BufferedReader br = new BufferedReader(new FileReader(pathToPlayerInfo))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                PlayerRank rank;
+                switch(values[2]){
+                    case "Silver":
+                        rank = PlayerRank.SILVER;
+                        break;
+                    case "Gold":
+                        rank = PlayerRank.GOLD;
+                        break;
+                    case "Platinum":
+                        rank = PlayerRank.PLATINUM;
+                        break;
+                    default:
+                        rank = PlayerRank.BRONZE;
+                        break;
+                }
+                this.addPlayer(createPlayerAndReadGameHistory(values[0], values[1], rank));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Function used for creating a new player and inserting theirs game history from csv file.
+     * @param playerNick - String nick of player
+     * @param platform - String platform
+     * @param rank - PlayerRank rank of player
+     * @return Player - new player object
+     */
+
+    private Player createPlayerAndReadGameHistory(String playerNick, String platform, PlayerRank rank){
+        Player player = new Player(playerNick, platform, rank);
+        String pathToGameHistory = "src/main/resources/game_history_files/"+player.getNick()+".csv";
+        System.out.println(pathToGameHistory);
+        try (BufferedReader br = new BufferedReader(new FileReader(pathToGameHistory))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                player.addGameToHistory(values[0], Float.parseFloat(values[1]), values[2], Integer.parseInt(values[3]), Integer.parseInt(values[4]), Integer.parseInt(values[5]), Integer.parseInt(values[6]));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return player;
     }
 
     /**
@@ -39,7 +90,6 @@ public class PlayerBase {
 
     public void addPlayer(Player p){
         this.playerBaseList.add(p);
-        this.numberOfPlayers += 1;
     }
 
     /**

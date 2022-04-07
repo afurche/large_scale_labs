@@ -1,6 +1,7 @@
 package furche.pg;
 
 import javafx.util.Pair;
+import jdk.nashorn.internal.objects.Global;
 import lombok.Getter;
 import lombok.Setter;
 import tech.tablesaw.api.DoubleColumn;
@@ -347,40 +348,32 @@ public class GameHistory implements Cloneable {
         return averages;
     }
 
-    public List<Double> calcNormalizedBattleRoyalScores(){
+    /**
+     * Functional calculating initial game score ( not normalized using global data )
+     * @return list<float> with not normalized game scores of players
+     */
+    public List<Float> calculateInitBattleRoyalScores(){
         List<Float> initScores = new ArrayList<>();
-        List<Double> normalizedScores = new ArrayList<>();
         for (Game game : this.playedBattleRoyalsList){
             initScores.add(game.countGameGrade());
         }
-        double max = initScores.stream().mapToDouble(v -> v).max().orElseThrow(NoSuchElementException::new);
-        double min = initScores.stream().mapToDouble(v -> v).min().orElseThrow(NoSuchElementException::new);
+        return initScores;
+    }
+
+    /**
+     * Function calculating normalized gaem
+     * @param globalGameScores list<float> containing global non normalized game scores
+     * @return list<double> with normalized game scores of player
+     */
+    public List<Double> calcNormalizedBattleRoyalScores(List<Float> globalGameScores){
+        List<Double> normalizedScores = new ArrayList<>();
+        List<Float> initScores = this.calculateInitBattleRoyalScores();
+        double max = globalGameScores.stream().mapToDouble(v -> v).max().orElseThrow(NoSuchElementException::new);
+        double min = globalGameScores.stream().mapToDouble(v -> v).min().orElseThrow(NoSuchElementException::new);
         for(Float gameScore : initScores){
             normalizedScores.add(5*(((double)gameScore - min)/ (max - min)));
         }
         return normalizedScores;
     }
 
-    public void getTimeSeriesPlot(){
-        List<? extends Game> sortedGames = new ArrayList<>(this.playedBattleRoyalsList);
-        sortedGames.sort(this.gameListComparator);
-        List<Float> initScores = new ArrayList<>();
-        List<String> gameDates = new ArrayList<>();
-        List<Double> normalizedScores = new ArrayList<>();
-        for (Game game : sortedGames){
-            initScores.add(game.countGameGrade());
-            gameDates.add(game.getGameStats().get("date"));
-        }
-        double max = initScores.stream().mapToDouble(v -> v).max().orElseThrow(NoSuchElementException::new);
-        double min = initScores.stream().mapToDouble(v -> v).min().orElseThrow(NoSuchElementException::new);
-        for(Float gameScore : initScores){
-            normalizedScores.add(5*(((double)gameScore - min)/ (max - min)));
-        }
-        String[] gamesDatesCol = new String[gameDates.size()];
-        gameDates.toArray(gamesDatesCol);
-
-        Table gameDatesScores = Table.create().addColumns(StringColumn.create("Date", gameDates),
-                                                            DoubleColumn.create("Game Score", normalizedScores));
-        Plot.show(TimeSeriesPlot.create("Date vs Game Score", gameDatesScores, "Date", "Game Score"));
-    }
 }
