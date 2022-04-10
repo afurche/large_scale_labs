@@ -225,10 +225,6 @@ public class Player {
         deepCopyGameHistory.getHistoryStats().put("TEST", 1);
         System.out.println(deepCopyGameHistory.getHistoryStats());
         System.out.println(this.gameHistory.getHistoryStats());
-//        System.out.println("Original game history: ");
-//        this.showGameHistory(1);
-//        System.out.println("Deep copy game history: ");
-//        deepCopyGameHistory.showGameResults(1);
     }
 
     /**

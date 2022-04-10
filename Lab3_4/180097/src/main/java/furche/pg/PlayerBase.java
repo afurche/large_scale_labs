@@ -6,6 +6,8 @@ import lombok.Setter;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,12 +53,54 @@ public class PlayerBase {
                         rank = PlayerRank.BRONZE;
                         break;
                 }
-                this.addPlayer(createPlayerAndReadGameHistory(values[0], values[1], rank));
+                Path path = Paths.get("src/main/resources/game_history_files/"+values[0]+".csv");
+                if(path.toFile().isFile()){
+                    this.addPlayer(createPlayerAndReadGameHistory(values[0], values[1], rank));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Constructor of PlayerBass class with additional parameter limiting amount of input data.
+     * @param playerCap - int amount of players in base
+     */
+    public PlayerBase(int playerCap){
+        this.playerBaseList = new ArrayList<>();
+        String pathToPlayerInfo = "src/main/resources/player_info.txt";
+        try (BufferedReader br = new BufferedReader(new FileReader(pathToPlayerInfo))) {
+            String line;
+            int i = 0;
+            while ((line = br.readLine()) != null && i < playerCap) {
+                i++;
+                String[] values = line.split(",");
+                PlayerRank rank;
+                switch(values[2]){
+                    case "Silver":
+                        rank = PlayerRank.SILVER;
+                        break;
+                    case "Gold":
+                        rank = PlayerRank.GOLD;
+                        break;
+                    case "Platinum":
+                        rank = PlayerRank.PLATINUM;
+                        break;
+                    default:
+                        rank = PlayerRank.BRONZE;
+                        break;
+                }
+                Path path = Paths.get("src/main/resources/game_history_files/"+values[0]+".csv");
+                if(path.toFile().isFile()){
+                    this.addPlayer(createPlayerAndReadGameHistory(values[0], values[1], rank));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * Function used for creating a new player and inserting theirs game history from csv file.
